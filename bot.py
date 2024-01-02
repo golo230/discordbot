@@ -1,60 +1,60 @@
 import discord
 import responses
 from discord.ext import tasks, commands
+from dicecog import DiceCog
+from calculator import CalculatorCog
+import requests as re
 
 master_list = []
 
 def run_discord_bot():
-    TOKEN = 'REDACTED FOR SECURITY REASONS'
+    TOKEN = 'REDACTED'
     bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
 
     @bot.event
     async def on_ready():
         # my_task.start()
+        await bot.add_cog(DiceCog(bot))
+        await bot.add_cog(CalculatorCog(bot))
         print(f'{bot.user} is now running!')
 
     @bot.command()
-    async def test(ctx):
+    async def ping(ctx):
         await ctx.send(responses.handle_response("ping"))
 
     @bot.command()
     async def hello(ctx):
         await ctx.send(responses.handle_response("hello"))
 
-    @bot.command()
-    async def d4(ctx):
-        await ctx.send(responses.handle_response("d4"))
+    @bot.command(aliases=['8ball'])
+    async def eight_ball(ctx, *args):
+        if len(args) <= 0:
+            c = "Please ask a question"
+            await ctx.send(c)
+        else:
+            await ctx.send(responses.handle_response("8ball"))
 
     @bot.command()
-    async def d6(ctx):
-        await ctx.send(responses.handle_response("d6"))
+    async def trivia(ctx, *args):
+        trivia_api_url = 'REDACTED'
 
-    @bot.command()
-    async def d8(ctx):
-        await ctx.send(responses.handle_response("d8"))
+        response = re.get(trivia_api_url)
+        data = response.json()
 
-    @bot.command()
-    async def d10(ctx):
-        await ctx.send(responses.handle_response("d10"))
+        if data["response_code"] != 0:
+            x = "ERROR: cannot fetch trivia question (not my fault)"
+            await ctx.send(x)
+        else:
+            x = data["results"][0]["question"]
+            y = data["results"][0]["correct_answer"]
+            await ctx.send(str(x) + " " + str(y))
 
-    @bot.command()
-    async def d12(ctx):
-        await ctx.send(responses.handle_response("d12"))
-
-    @bot.command()
-    async def d20(ctx):
-        await ctx.send(responses.handle_response("d20"))
-
-    @bot.command()
-    async def d100(ctx):
-        await ctx.send(responses.handle_response("d100"))
-
-    @bot.command()
-    async def coin(ctx):
-        await ctx.send(responses.handle_response("coin"))
-
-    @bot.command()
-    async def rps(ctx, arg):
+    @bot.command(aliases=['rockpaperscissors'])
+    async def rps(ctx, arg=None):
+        if not arg:
+            c = "Please enter a valid rock-paper-scissors value."
+            await ctx.send(c)
+            return
         x = arg.lower()
         ans = ["rock", "paper", "scissors"]
         c = "you should not see this value"
@@ -67,57 +67,6 @@ def run_discord_bot():
             else:
                 c = f"You win! I got {val}."
         await ctx.send(c)
-
-    @bot.command()
-    async def add(ctx, *args):
-        x = 0
-        if len(args) <= 0:
-            x = "no parameters provided"
-            await ctx.send(x)
-        else:
-            for i in args:
-                x += int(i)
-            await ctx.send(x)
-
-    @bot.command()
-    async def subtract(ctx, *args):
-        if len(args) <= 0:
-            x = "no parameters provided"
-            await ctx.send(x)
-        else:
-            x = int(args[0])
-            l = args[1:]
-            for i in l:
-                x -= int(i)
-            await ctx.send(x)
-
-    @bot.command()
-    async def multiply(ctx, *args):
-        if len(args) <= 0:
-            x = "no parameters provided"
-            await ctx.send(x)
-        else:
-            x = int(args[0])
-            l = args[1:]
-            for i in l:
-                x *= int(i)
-            await ctx.send(x)
-
-    @bot.command()
-    async def divide(ctx, *args):
-        if len(args) <= 0:
-            x = "no parameters provided"
-            await ctx.send(x)
-        else:
-            x = int(args[0])
-            l = args[1:]
-            if "0" in l:
-                x = "ERROR: cannot divide by 0"
-                await ctx.send(x)
-            else:
-                for i in l:
-                    x /= int(i)
-                await ctx.send("{:.5f}".format(x))
 
     @bot.command()
     async def database(ctx, *args):
@@ -151,8 +100,10 @@ def run_discord_bot():
                 if response.content.lower() == "y" or response.content.lower() == "yes":
                     master_list.clear()
                     x = "Database cleared :("
-                else:
+                elif response.content.lower() == "n" or response.content.lower() == "no":
                     x = "Database not cleared."
+                else:
+                    x = "Invalid response, aborting."
             await ctx.send(x)
 
     bot.run(TOKEN)
