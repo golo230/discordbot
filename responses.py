@@ -59,5 +59,13 @@ def handle_response(message) -> str:
     
     if p_message == '8ball':
         return answer_dict[random.randint(1, 20)]
+    
+    if p_message == 'guess':
+        return random.randint(1, 100)
+    
+    if p_message == 'trivia':
+        l = [1,2,3,4]
+        random.shuffle(l)
+        return l
 
     return 'Unknown command'
