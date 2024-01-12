@@ -1,8 +1,8 @@
 import discord
 import responses
 from discord.ext import tasks, commands
-from dicecog import DiceCog
-from calculator import CalculatorCog
+from dicecog import Dice
+from calculator import Calculator
 import requests as re
 import html
 import datetime
@@ -16,8 +16,8 @@ def run_discord_bot():
 
     @bot.event
     async def on_ready():
-        await bot.add_cog(DiceCog(bot))
-        await bot.add_cog(CalculatorCog(bot))
+        await bot.add_cog(Dice(bot))
+        await bot.add_cog(Calculator(bot))
         print(f'{bot.user} is now running!')
 
     @bot.command()
@@ -56,21 +56,21 @@ def run_discord_bot():
 
                 while True:
                     try:
-                        response = await bot.wait_for("message", check=check, timeout=10)
+                        response = await bot.wait_for("message", check=check, timeout=15)
 
-                        if (response.content.lower() == "a" or response.content.lower() == "true") and data['results'][0]['correct_answer'] == 'true':
+                        if (response.content.lower() == "a" or response.content.lower() == "true") and data['results'][0]['correct_answer'] == 'True':
                             x = f"{response.author} is correct! It is true."
                             await ctx.send(x)
                             break
-                        elif (response.content.lower() == "b" or response.content.lower() == "false") and data['results'][0]['correct_answer'] == 'false':
+                        elif (response.content.lower() == "b" or response.content.lower() == "false") and data['results'][0]['correct_answer'] == 'False':
                             x = f"{response.author} is correct! It is false."
                             await ctx.send(x)
                             break
-                        elif (response.content.lower() == "a" or response.content.lower() == "true") and data['results'][0]['correct_answer'] == 'false':
+                        elif (response.content.lower() == "a" or response.content.lower() == "true") and data['results'][0]['correct_answer'] == 'False':
                             x = f"{response.author} is wrong! It is false."
                             await ctx.send(x)
                             break
-                        elif (response.content.lower() == "b" or response.content.lower() == "false") and data['results'][0]['correct_answer'] == 'true':
+                        elif (response.content.lower() == "b" or response.content.lower() == "false") and data['results'][0]['correct_answer'] == 'True':
                             x = f"{response.author} is wrong! It is true."
                             await ctx.send(x)
                             break
@@ -88,12 +88,12 @@ def run_discord_bot():
                 }
                 indx = responses.handle_response("trivia")
                 question = html.unescape(data["results"][0]["question"])
-                answers = f"\nA: {ans[indx[0]]}\nB: {ans[indx[1]]}\nC: {ans[indx[2]]}\nD: {ans[indx[3]]}"
+                answers = html.unescape(f"\nA: {ans[indx[0]]}\nB: {ans[indx[1]]}\nC: {ans[indx[2]]}\nD: {ans[indx[3]]}")
                 await ctx.send(question + answers)
 
                 while True:
                     try:
-                        response = await bot.wait_for("message", check=check, timeout=10)
+                        response = await bot.wait_for("message", check=check, timeout=15)
 
                         if response.content.lower() == "a" and data['results'][0]['correct_answer'] == ans[indx[0]]:
                             x = f"{response.author} is correct! It is {data['results'][0]['correct_answer']}."
@@ -233,16 +233,6 @@ def run_discord_bot():
 
         await ctx.send(img)
 
-    @bot.command(aliases=['kanyewest'])
-    async def kanye(ctx):
-        cat_api_url = 'https://api.kanye.rest/'
-        response = re.get(cat_api_url)
-        data = response.json()
-
-        img = data["quote"] + " -Kanye West"
-
-        await ctx.send(img)
-
     @bot.command(aliases=['task', 'bored'])
     async def activity(ctx):
         task_api = 'https://www.boredapi.com/api/activity/'
@@ -302,13 +292,22 @@ def run_discord_bot():
             c = f"Pings disabled! {activePing}"
             await ctx.send(c)
 
-    @tasks.loop(seconds=60) # FILL IN
+    @bot.command()
+    async def word(ctx):
+        word_api = 'https://random-word-api.herokuapp.com/word'
+        response = re.get(word_api)
+        data = response.json()
+
+        c = data[0]
+        await ctx.send(c)
+
+    @tasks.loop(minutes=1) # FILL IN
     async def my_task():
         d = datetime.datetime.now()
-        channel_id = 'TODO'
+        channel_id = '1071338465456836649'
         channel = bot.get_channel(channel_id)
 
-        if d.minute == 49:
-            await channel.send("<@&ROLE_ID> TIME TO ROLL!")
+        if int(d.minute) == 49:
+            await channel.send("<@&1195279140752986143> TIME TO ROLL!")
 
     bot.run(TOKEN)

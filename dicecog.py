@@ -2,7 +2,7 @@ import discord
 import responses
 from discord.ext import commands
 
-class DiceCog(commands.Cog):
+class Dice(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
